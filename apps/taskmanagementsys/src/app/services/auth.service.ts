@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { Router } from '@angular/router'; // <-- 1. IMPORT ROUTER
 import { BehaviorSubject } from 'rxjs';
 import axios from 'axios';
 import { environment } from '../../environments';
@@ -24,6 +25,7 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private router = inject(Router); // <-- 2. INJECT ROUTER
 
   constructor() {
     this.initializeAxios();
@@ -78,6 +80,7 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     this.currentUserSubject.next(null);
+    this.router.navigate(['/login']); // <-- 3. ADD REDIRECTION
   }
 
   getToken(): string | null {

@@ -2,20 +2,34 @@ import { Injectable } from '@angular/core';
 import axios from 'axios';
 import { environment } from '../../environments/environment';
 
-export interface Task {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface Organization {
   id: number;
   name: string;
   description: string;
   parentId?: number;
+}
+
+export interface Task {
+  id: number;
+  title: string;
+  description: string;
+  status: 'pending' | 'in-progress' | 'completed';
+  createdAt: string;
+  updatedAt: string;
+  createdById?: number;
+  organizationId?: number;
+}
+
+export interface CreateTaskData {
+  title: string;
+  description?: string;
+  status?: string;
+}
+
+export interface UpdateTaskData {
+  title?: string;
+  description?: string;
+  status?: string;
 }
 
 @Injectable({

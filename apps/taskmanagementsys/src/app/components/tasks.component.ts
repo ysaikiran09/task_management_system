@@ -9,7 +9,6 @@ import { ApiService, Task, AuthService, User } from '../services';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="min-h-screen bg-gray-100">
-      <!-- Header -->
       <header class="bg-white shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex justify-between items-center py-4">
@@ -29,21 +28,21 @@ import { ApiService, Task, AuthService, User } from '../services';
         </div>
       </header>
 
-      <!-- Main Content -->
       <main class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Create Task Form -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 class="text-lg font-semibold mb-4">Create New Task</h2>
+          <h2 class="text-lg font-semibold mb-4">
+            {{ editingTask ? 'Edit Task' : 'Create New Task' }}
+          </h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="text"
-              [(ngModel)]="newTask.title"
+              [(ngModel)]="taskFormModel.title"
               placeholder="Task title"
               class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
 
             <select
-              [(ngModel)]="newTask.status"
+              [(ngModel)]="taskFormModel.status"
               class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="pending">Pending</option>
@@ -52,23 +51,31 @@ import { ApiService, Task, AuthService, User } from '../services';
             </select>
 
             <textarea
-              [(ngModel)]="newTask.description"
+              [(ngModel)]="taskFormModel.description"
               placeholder="Description"
               class="md:col-span-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows="3"
             ></textarea>
 
-            <button
-              (click)="createTask()"
-              [disabled]="!newTask.title"
-              class="md:col-span-2 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50"
-            >
-              Add Task
-            </button>
+            <div class="md:col-span-2 flex space-x-2">
+              <button
+                (click)="editingTask ? updateTask() : createTask()"
+                [disabled]="!taskFormModel.title"
+                class="flex-1 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50"
+              >
+                {{ editingTask ? 'Update Task' : 'Add Task' }}
+              </button>
+              <button
+                *ngIf="editingTask"
+                (click)="cancelEdit()"
+                class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Tasks List -->
         <div class="bg-white rounded-lg shadow-md">
           <div class="px-6 py-4 border-b">
             <h2 class="text-lg font-semibold">
@@ -98,6 +105,12 @@ import { ApiService, Task, AuthService, User } from '../services';
                 </div>
                 <div class="flex space-x-2">
                   <button
+                    (click)="editTask(task)"
+                    class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
+                  >
+                    Edit
+                  </button>
+                  <button
                     (click)="deleteTask(task.id)"
                     class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
                   >
@@ -122,11 +135,16 @@ import { ApiService, Task, AuthService, User } from '../services';
 export class TasksComponent implements OnInit {
   tasks: Task[] = [];
   currentUser: User | null = null;
-  newTask: Partial<Task> = {
+  
+  // Using a generic name for the form model
+  taskFormModel: Partial<Task> = {
     title: '',
     description: '',
     status: 'pending',
   };
+  
+  // This will hold the task being edited
+  editingTask: Task | null = null;
 
   public authService = inject(AuthService);
   private apiService = inject(ApiService);
@@ -147,15 +165,56 @@ export class TasksComponent implements OnInit {
   }
 
   async createTask() {
-    if (!this.newTask.title) return;
+    if (!this.taskFormModel.title) return;
 
     try {
-      const task = await this.apiService.createTask(this.newTask);
+      const task = await this.apiService.createTask(this.taskFormModel);
       this.tasks.push(task);
-      this.newTask = { title: '', description: '', status: 'pending' };
+      this.resetForm();
     } catch (error) {
       console.error('Failed to create task', error);
     }
+  }
+
+  // New method to handle selecting a task for editing
+  editTask(task: Task) {
+    this.editingTask = task;
+    // Copy task data to the form model to avoid directly editing the list
+    this.taskFormModel = {
+      title: task.title,
+      description: task.description,
+      status: task.status,
+    };
+  }
+
+  // New method to update the task
+  async updateTask() {
+    if (!this.editingTask || !this.taskFormModel.title) return;
+
+    try {
+      const updatedTask = await this.apiService.updateTask(
+        this.editingTask.id,
+        this.taskFormModel
+      );
+      // Find the index of the task and update it in the array
+      const index = this.tasks.findIndex((t) => t.id === this.editingTask!.id);
+      if (index !== -1) {
+        this.tasks[index] = updatedTask;
+      }
+      this.cancelEdit(); // Reset the form
+    } catch (error) {
+      console.error('Failed to update task', error);
+    }
+  }
+
+  // New method to cancel the edit mode
+  cancelEdit() {
+    this.editingTask = null;
+    this.resetForm();
+  }
+
+  private resetForm() {
+    this.taskFormModel = { title: '', description: '', status: 'pending' };
   }
 
   async deleteTask(id: number) {
