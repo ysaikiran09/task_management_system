@@ -56,7 +56,7 @@ import { ApiService, Task, AuthService, User } from '../services';
     </div>
 
     <div class="min-h-screen bg-gray-50">
-      <header class="bg-white shadow-sm sticky top-0 z-10">
+     <header class="bg-white shadow-sm sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex justify-between items-center py-4">
             <div class="flex items-center space-x-4">
@@ -66,6 +66,12 @@ import { ApiService, Task, AuthService, User } from '../services';
               </p>
             </div>
             <div class="flex items-center space-x-4">
+               <a *ngIf="currentUser?.role === 'admin'" 
+                  routerLink="/admin" 
+                  class="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-black font-semibold flex items-center space-x-2">
+                  <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>
+                  <span>Manage Users</span>
+               </a>
                <button (click)="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-semibold flex items-center space-x-2">
                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                 <span>Create Task</span>
